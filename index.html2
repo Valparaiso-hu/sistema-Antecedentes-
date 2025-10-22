@@ -261,7 +261,7 @@ document.getElementById('confirmarPago').onclick = () => {
     antecedente.pagado = true;
     renderLista();
     modalPagar.style.display='none';
-  } else {
+  r} else {
     alert('Antecedente no encontrado');
   }
   document.getElementById('idPagar').value='';
