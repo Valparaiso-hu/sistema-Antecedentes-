@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestión de Antecedentes</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #333; /* Fondo gris oscuro */
+    color: yellow; /* Texto principal */
+    text-align: center;
+  }
+
+  h1 {
+    color: yellow;
+  }
+
+  button {
+    padding: 10px 20px;
+    margin: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #222; /* Fondo negro */
+    color: yellow; /* Texto amarillo */
+    border: 2px solid yellow; /* Borde amarillo */
+    border-radius: 5px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #444; /* Fondo tabla gris oscuro */
+  }
+
+  th, td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 2px solid yellow; /* Línea amarilla */
+    border-right: 2px solid yellow; /* Línea vertical amarilla */
+  }
+
+  th {
+    background-color: #222; /* Fondo negro */
+    color: yellow; /* Letras amarillas */
+  }
+
+  td:last-child, th:last-child {
+    border-right: none;
+  }
+
+  .no-pagado {
+    color: red;
+    font-weight: bold;
+  }
+
+  .pagado {
+    color: green;
+    font-weight: bold;
+  }
+
+  /* Modal */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 10;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.8);
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal-content {
+    background-color: #444; /* Fondo gris oscuro */
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 400px;
+    width: 90%;
+    text-align: left;
+    color: yellow; /* Letras amarillas */
+    border: 2px solid yellow; /* Borde amarillo */
+  }
+
+  .modal-content input {
+    width: 100%;
+    margin: 10px 0;
+    padding: 8px;
+    font-size: 14px;
+    background-color: #222;
+    color: yellow;
+    border: 1px solid yellow;
+  }
+
+  .close {
+    float: right;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 18px;
+    color: yellow;
+  }
+
+  .resultado {
+    margin-top: 10px;
+    padding: 10px;
+    background: #222;
+    border-radius: 5px;
+    color: yellow;
+    border: 2px solid yellow;
+  }
+</style>
+</head>
+<body>
+
+<h1>Gestión de Antecedentes</h1>
+
+<button id="btnSubir">Subir Antecedente</button>
+<button id="btnPagar">Pagar Antecedente</button>
+<button id="btnBuscar">Buscar Antecedente</button>
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th><th>Nombre</th><th>RUT</th><th>Artículos</th><th>Monto total</th><th>Estado</th>
+    </tr>
+  </thead>
+  <tbody id="listaAntecedentes"></tbody>
+</table>
+
+<!-- Modal Subir -->
+<div id="modalSubir" class="modal">
+  <div class="modal-content">
+    <span class="close" id="cerrarSubir">&times;</span>
+    <h3>Subir Antecedente</h3>
+    <input type="text" id="nombre" placeholder="Nombre completo" required>
+    <input type="text" id="rut" placeholder="RUT" required>
+    <input type="text" id="articulos" placeholder="Artículos" required>
+    <input type="number" id="monto" placeholder="Monto total" required>
+    <button id="guardarAntecedente">Guardar Antecedente</button>
+  </div>
+</div>
+
+<!-- Modal Pagar -->
+<div id="modalPagar" class="modal">
+  <div class="modal-content">
+    <span class="close" id="cerrarPagar">&times;</span>
+    <h3>Pagar Antecedente</h3>
+    <input type="text" id="idPagar" placeholder="ID del antecedente" required>
+    <button id="confirmarPago">Pagar</button>
+  </div>
+</div>
+
+<!-- Modal Buscar -->
+<div id="modalBuscar" class="modal">
+  <div class="modal-content">
+    <span class="close" id="cerrarBuscar">&times;</span>
+    <h3>Buscar Antecedente</h3>
+    <input type="text" id="inputBuscar" placeholder="ID o Nombre">
+    <button id="buscarBtn">Buscar</button>
+    <div id="resultadosBuscar" class="resultado"></div>
+  </div>
+</div>
+
+<script>
+let antecedentes = [];
+let contadorID = 1;
+
+const lista = document.getElementById('listaAntecedentes');
+
+function renderLista() {
+  lista.innerHTML = '';
+  antecedentes.forEach(a => {
+    const fila = document.createElement('tr');
+    fila.innerHTML = `
+      <td>${a.id.toString().padStart(3,'0')}</td>
+      <td>${a.nombre}</td>
+      <td>${a.rut}</td>
+      <td>${a.articulos}</td>
+      <td>${a.monto}</td>
+      <td class="${a.pagado ? 'pagado' : 'no-pagado'}">${a.pagado ? 'Pagado' : 'No pagado'}</td>
+    `;
+    lista.appendChild(fila);
+  });
+}
+
+// Modales
+const modalSubir = document.getElementById('modalSubir');
+const modalPagar = document.getElementById('modalPagar');
+const modalBuscar = document.getElementById('modalBuscar');
+
+const cerrarSubir = document.getElementById('cerrarSubir');
+const cerrarPagar = document.getElementById('cerrarPagar');
+const cerrarBuscar = document.getElementById('cerrarBuscar');
+
+cerrarSubir.onclick = () => modalSubir.style.display='none';
+cerrarPagar.onclick = () => modalPagar.style.display='none';
+cerrarBuscar.onclick = () => modalBuscar.style.display='none';
+
+window.onclick = e => {
+  if(e.target==modalSubir) modalSubir.style.display='none';
+  if(e.target==modalPagar) modalPagar.style.display='none';
+  if(e.target==modalBuscar) modalBuscar.style.display='none';
+};
+
+// Botón Subir Antecedente
+document.getElementById('btnSubir').onclick = () => {
+  const pwd = prompt('Ingrese la contraseña para subir antecedente:');
+  if(pwd === 'CarabinerosDeChile002'){
+    modalSubir.style.display='flex';
+  } else {
+    alert('Contraseña incorrecta');
+  }
+};
+
+// Botón Pagar Antecedente
+document.getElementById('btnPagar').onclick = () => {
+  const pwd = prompt('Ingrese la contraseña para pagar antecedente:');
+  if(pwd === 'MinisterioPublico862'){
+    modalPagar.style.display='flex';
+  } else {
+    alert('Contraseña incorrecta');
+  }
+};
+
+// Botón Buscar Antecedente
+document.getElementById('btnBuscar').onclick = () => modalBuscar.style.display='flex';
+
+// Guardar Antecedente
+document.getElementById('guardarAntecedente').onclick = () => {
+  const nombre = document.getElementById('nombre').value;
+  const rut = document.getElementById('rut').value;
+  const articulos = document.getElementById('articulos').value;
+  const monto = document.getElementById('monto').value;
+
+  antecedentes.push({
+    id: contadorID++,
+    nombre,
+    rut,
+    articulos,
+    monto,
+    pagado: false
+  });
+
+  document.getElementById('nombre').value='';
+  document.getElementById('rut').value='';
+  document.getElementById('articulos').value='';
+  document.getElementById('monto').value='';
+  modalSubir.style.display='none';
+  renderLista();
+};
+
+// Confirmar pago
+document.getElementById('confirmarPago').onclick = () => {
+  const id = parseInt(document.getElementById('idPagar').value);
+  const antecedente = antecedentes.find(a=>a.id===id);
+
+  if(antecedente){
+    antecedente.pagado = true;
+    renderLista();
+    modalPagar.style.display='none';
+  } else {
+    alert('Antecedente no encontrado');
+  }
+  document.getElementById('idPagar').value='';
+};
+
+// Buscar Antecedente
+document.getElementById('buscarBtn').onclick = () => {
+  const term = document.getElementById('inputBuscar').value.toLowerCase();
+  const resultados = antecedentes.filter(a => 
+    a.nombre.toLowerCase().includes(term) || a.id.toString() === term
+  );
+  const resultadosDiv = document.getElementById('resultadosBuscar');
+  if(resultados.length === 0) resultadosDiv.innerHTML='No se encontraron antecedentes.';
+  else resultadosDiv.innerHTML = resultados.map(a => `
+    <div>
+      <strong>ID:</strong> ${a.id.toString().padStart(3,'0')} |
+      <strong>Nombre:</strong> ${a.nombre} |
+      <strong>Estado:</strong> <span class="${a.pagado ? 'pagado':'no-pagado'}">${a.pagado ? 'Pagado':'No pagado'}</span>
+    </div>
+  `).join('');
+};
+</script>
+
+</body>
+</html>
